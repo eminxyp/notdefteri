@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Not Defteri</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0f1117;
+    --surface:#1a1d27;
+    --surface2:#21253a;
+    --border:#2a2f45;
+    --accent:#7c6af7;
+    --accent2:#5b4fcf;
+    --text:#e8eaf6;
+    --text2:#9198b5;
+    --text3:#5c6380;
+    --danger:#e05c7a;
+    --success:#4ecf8a;
+    --radius:14px;
+    --sidebar:300px;
+  }
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    display:flex;
+    overflow:hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar{
+    width:var(--sidebar);
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    flex-shrink:0;
+  }
+  .sidebar-header{
+    padding:24px 20px 16px;
+    border-bottom:1px solid var(--border);
+  }
+  .app-title{
+    font-family:'Playfair Display',serif;
+    font-size:22px;
+    font-weight:600;
+    color:var(--text);
+    letter-spacing:-0.3px;
+    margin-bottom:16px;
+  }
+  .app-title span{
+    color:var(--accent);
+  }
+  .new-btn{
+    width:100%;
+    padding:11px 16px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:background 0.2s,transform 0.1s;
+    font-family:'Inter',sans-serif;
+  }
+  .new-btn:hover{background:var(--accent2)}
+  .new-btn:active{transform:scale(0.98)}
+  .new-btn svg{flex-shrink:0}
+
+  .search-wrap{
+    padding:12px 20px;
+    border-bottom:1px solid var(--border);
+  }
+  .search-input{
+    width:100%;
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:9px 14px 9px 36px;
+    color:var(--text);
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+    transition:border-color 0.2s;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235c6380' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:12px center;
+  }
+  .search-input:focus{border-color:var(--accent)}
+  .search-input::placeholder{color:var(--text3)}
+
+  .notes-list{
+    flex:1;
+    overflow-y:auto;
+    padding:8px 12px;
+  }
+  .notes-list::-webkit-scrollbar{width:4px}
+  .notes-list::-webkit-scrollbar-track{background:transparent}
+  .notes-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  .note-item{
+    padding:13px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-bottom:4px;
+    border:1px solid transparent;
+    transition:all 0.15s;
+    position:relative;
+  }
+  .note-item:hover{background:var(--surface2);border-color:var(--border)}
+  .note-item.active{background:var(--surface2);border-color:var(--accent)}
+  .note-item-title{
+    font-size:14px;
+    font-weight:500;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-bottom:4px;
+  }
+  .note-item-preview{
+    font-size:12px;
+    color:var(--text3);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-bottom:5px;
+  }
+  .note-item-meta{
+    font-size:11px;
+    color:var(--text3);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .note-tag{
+    font-size:10px;
+    padding:2px 7px;
+    border-radius:20px;
+    background:rgba(124,106,247,0.15);
+    color:var(--accent);
+    font-weight:500;
+  }
+  .note-delete-btn{
+    position:absolute;
+    top:10px;right:10px;
+    background:none;
+    border:none;
+    color:var(--text3);
+    cursor:pointer;
+    opacity:0;
+    padding:4px;
+    border-radius:6px;
+    transition:all 0.15s;
+    line-height:1;
+  }
+  .note-item:hover .note-delete-btn{opacity:1}
+  .note-delete-btn:hover{color:var(--danger);background:rgba(224,92,122,0.12)}
+
+  .empty-state{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--text3);
+    font-size:13px;
+    line-height:1.6;
+  }
+  .empty-state svg{margin:0 auto 12px;display:block;opacity:0.4}
+
+  /* EDITOR */
+  .editor-area{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .editor-toolbar{
+    padding:16px 28px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface);
+    flex-wrap:wrap;
+  }
+  .toolbar-group{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    padding-right:10px;
+    border-right:1px solid var(--border);
+  }
+  .toolbar-group:last-child{border-right:none;padding-right:0}
+  .tb-btn{
+    background:none;
+    border:none;
+    color:var(--text2);
+    cursor:pointer;
+    padding:7px 9px;
+    border-radius:7px;
+    font-size:13px;
+    font-weight:600;
+    transition:all 0.15s;
+    font-family:'Inter',sans-serif;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+  }
+  .tb-btn:hover{background:var(--surface2);color:var(--text)}
+  .tb-btn.active{background:rgba(124,106,247,0.15);color:var(--accent)}
+  .tb-btn svg{pointer-events:none}
+
+  .save-btn{
+    margin-left:auto;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:9px;
+    padding:8px 18px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    transition:all 0.2s;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .save-btn:hover{background:var(--accent2)}
+  .save-indicator{
+    font-size:12px;
+    color:var(--success);
+    display:flex;
+    align-items:center;
+    gap:4px;
+    opacity:0;
+    transition:opacity 0.3s;
+  }
+  .save-indicator.show{opacity:1}
+
+  .title-input{
+    width:100%;
+    background:none;
+    border:none;
+    outline:none;
+    font-family:'Playfair Display',serif;
+    font-size:30px;
+    font-weight:600;
+    color:var(--text);
+    padding:28px 32px 10px;
+    line-height:1.3;
+  }
+  .title-input::placeholder{color:var(--text3)}
+
+  .tag-input-wrap{
+    padding:0 32px 16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tag-pill{
+    background:rgba(124,106,247,0.15);
+    color:var(--accent);
+    font-size:12px;
+    padding:3px 10px;
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-weight:500;
+  }
+  .tag-pill button{
+    background:none;border:none;color:var(--accent);
+    cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:0.7;
+  }
+  .tag-pill button:hover{opacity:1}
+  .tag-add-input{
+    background:none;
+    border:none;
+    outline:none;
+    font-size:12px;
+    color:var(--text2);
+    font-family:'Inter',sans-serif;
+    width:120px;
+  }
+  .tag-add-input::placeholder{color:var(--text3)}
+
+  .editor-content{
+    flex:1;
+    overflow-y:auto;
+    padding:0 32px 32px;
+  }
+  .editor-content::-webkit-scrollbar{width:4px}
+  .editor-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  #editor{
+    min-height:400px;
+    outline:none;
+    font-size:16px;
+    line-height:1.85;
+    color:var(--text);
+    caret-color:var(--accent);
+  }
+  #editor:empty::before{
+    content:attr(data-placeholder);
+    color:var(--text3);
+    pointer-events:none;
+  }
+  #editor h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;margin:20px 0 10px;color:var(--text)}
+  #editor h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;margin:16px 0 8px;color:var(--text)}
+  #editor h3{font-size:16px;font-weight:600;margin:14px 0 6px;color:var(--text)}
+  #editor p{margin-bottom:10px}
+  #editor ul,#editor ol{padding-left:24px;margin-bottom:10px}
+  #editor li{margin-bottom:4px}
+  #editor blockquote{
+    border-left:3px solid var(--accent);
+    padding:8px 16px;
+    margin:12px 0;
+    background:rgba(124,106,247,0.07);
+    border-radius:0 8px 8px 0;
+    color:var(--text2);
+    font-style:italic;
+  }
+  #editor img{
+    max-width:100%;
+    border-radius:10px;
+    margin:12px 0;
+    display:block;
+    border:1px solid var(--border);
+  }
+  #editor code{
+    background:var(--surface2);
+    border:1px solid var(--border);
+    padding:2px 7px;
+    border-radius:5px;
+    font-size:13px;
+    font-family:monospace;
+    color:#c9d1f7;
+  }
+  #editor pre{
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    overflow-x:auto;
+    margin:12px 0;
+  }
+  #editor pre code{background:none;border:none;padding:0}
+  #editor hr{border:none;border-top:1px solid var(--border);margin:20px 0}
+  #editor a{color:var(--accent);text-decoration:underline}
+
+  /* Welcome screen */
+  .welcome{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:var(--text3);
+    gap:12px;
+  }
+  .welcome svg{opacity:0.3}
+  .welcome h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--text2);font-weight:500}
+  .welcome p{font-size:14px;text-align:center;max-width:260px;line-height:1.6}
+
+  /* Image upload overlay */
+  .img-upload-input{display:none}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:24px;right:24px;
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 18px;
+    font-size:13px;
+    color:var(--text);
+    display:flex;align-items:center;gap:8px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4);
+    transform:translateY(80px);opacity:0;
+    transition:all 0.3s;
+    z-index:1000;
+    pointer-events:none;
+  }
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.success{border-color:var(--success);color:var(--success)}
+  .toast.danger{border-color:var(--danger);color:var(--danger)}
+
+  /* Color picker for text */
+  .color-input{
+    width:28px;height:28px;border:none;border-radius:7px;cursor:pointer;
+    padding:2px;background:var(--surface2);border:1px solid var(--border);
+  }
+
+  /* Word count */
+  .word-count{
+    padding:8px 32px;
+    font-size:11px;
+    color:var(--text3);
+    border-top:1px solid var(--border);
+    display:flex;gap:16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="app-title">Not<span>.</span></div>
+    <button class="new-btn" onclick="newNote()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Yeni Not
+    </button>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" placeholder="Notlarda ara..." id="searchInput" oninput="searchNotes()">
+  </div>
+  <div class="notes-list" id="notesList"></div>
+</div>
+
+<!-- EDITOR AREA -->
+<div class="editor-area" id="editorArea">
+  <div class="welcome" id="welcomeScreen">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <h2>Notların burada</h2>
+    <p>Yeni bir not oluştur ya da mevcut notlarından birini seç.</p>
+  </div>
+
+  <div id="editorPanel" style="display:none;flex-direction:column;height:100%;overflow:hidden;flex:1">
+    <div class="editor-toolbar">
+      <!-- Format -->
+      <div class="toolbar-group">
+        <button class="tb-btn" onclick="fmt('bold')" title="Kalın (Ctrl+B)"><b>B</b></button>
+        <button class="tb-btn" onclick="fmt('italic')" title="İtalik (Ctrl+I)"><i>İ</i></button>
+        <button class="tb-btn" onclick="fmt('underline')" title="Altı çizili"><u>A</u></button>
+        <button class="tb-btn" onclick="fmt('strikeThrough')" title="Üstü çizili"><s>S</s></button>
+      </div>
+      <!-- Headings -->
+      <div class="toolbar-group">
+        <button class="tb-btn" onclick="fmtBlock('h1')" title="Başlık 1">H1</button>
+        <button class="tb-btn" onclick="fmtBlock('h2')" title="Başlık 2">H2</button>
+        <button class="tb-btn" onclick="fmtBlock('h3')" title="Başlık 3">H3</button>
+        <button class="tb-btn" onclick="fmtBlock('p')" title="Paragraf">¶</button>
+      </div>
+      <!-- Lists -->
+      <div class="toolbar-group">
+        <button class="tb-btn" onclick="fmt('insertUnorderedList')" title="Madde listesi">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="4" cy="18" r="1.5"/></svg>
+        </button>
+        <button class="tb-btn" onclick="fmt('insertOrderedList')" title="Numaralı liste">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="2" y="8" font-size="7" fill="currentColor" stroke="none">1.</text><text x="2" y="14" font-size="7" fill="currentColor" stroke="none">2.</text><text x="2" y="20" font-size="7" fill="currentColor" stroke="none">3.</text></svg>
+        </button>
+        <button class="tb-btn" onclick="fmtBlock('blockquote')" title="Alıntı">❝</button>
+        <button class="tb-btn" onclick="insertHR()" title="Çizgi">—</button>
+      </div>
+      <!-- Media -->
+      <div class="toolbar-group">
+        <button class="tb-btn" onclick="document.getElementById('imgUpload').click()" title="Resim ekle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Resim
+        </button>
+        <input type="file" id="imgUpload" class="img-upload-input" accept="image/*" onchange="insertImage(event)">
+        <button class="tb-btn" onclick="insertLink()" title="Link ekle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+      </div>
+      <!-- Color -->
+      <div class="toolbar-group">
+        <input type="color" class="color-input" title="Yazı rengi" onchange="fmt('foreColor',this.value)" value="#7c6af7">
+      </div>
+      <!-- Save -->
+      <div style="display:flex;align-items:center;gap:12px;margin-left:auto">
+        <span class="save-indicator" id="saveIndicator">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Kaydedildi
+        </span>
+        <button class="save-btn" onclick="saveNote()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Kaydet
+        </button>
+      </div>
+    </div>
+
+    <input class="title-input" type="text" id="noteTitle" placeholder="Başlık..." oninput="autoSave()">
+
+    <div class="tag-input-wrap" id="tagWrap">
+      <div id="tagList"></div>
+      <input class="tag-add-input" id="tagInput" type="text" placeholder="+ Etiket ekle (Enter)" onkeydown="handleTag(event)">
+    </div>
+
+    <div class="editor-content">
+      <div id="editor" contenteditable="true" data-placeholder="Yazmaya başla..." oninput="autoSave()"></div>
+    </div>
+
+    <div class="word-count">
+      <span id="wordCount">0 kelime</span>
+      <span id="charCount">0 karakter</span>
+      <span id="noteDate" style="margin-left:auto"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+let notes = JSON.parse(localStorage.getItem('notdefteri_notes') || '[]');
+let currentId = null;
+let autoSaveTimer = null;
+let currentTags = [];
+
+function generateId(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+
+function formatDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function getTextContent(html){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || '';
+}
+
+function renderList(filter=''){
+  const list = document.getElementById('notesList');
+  const filtered = notes.filter(n=>{
+    if(!filter) return true;
+    const q = filter.toLowerCase();
+    return n.title.toLowerCase().includes(q) || getTextContent(n.content).toLowerCase().includes(q);
+  });
+  if(filtered.length===0){
+    list.innerHTML = `<div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      ${filter ? 'Sonuç bulunamadı.' : 'Henüz not yok.<br>Yeni bir not oluştur.'}
+    </div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(n=>`
+    <div class="note-item ${n.id===currentId?'active':''}" onclick="openNote('${n.id}')">
+      <div class="note-item-title">${n.title || 'Başlıksız Not'}</div>
+      <div class="note-item-preview">${getTextContent(n.content).slice(0,60) || 'İçerik yok...'}</div>
+      <div class="note-item-meta">
+        <span>${formatDate(n.updatedAt)}</span>
+        ${n.tags&&n.tags.length?`<span class="note-tag">${n.tags[0]}</span>`:''}
+      </div>
+      <button class="note-delete-btn" onclick="deleteNote(event,'${n.id}')" title="Sil">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+function newNote(){
+  const note = {
+    id:generateId(),
+    title:'',
+    content:'',
+    tags:[],
+    createdAt:Date.now(),
+    updatedAt:Date.now()
+  };
+  notes.unshift(note);
+  saveAll();
+  openNote(note.id);
+}
+
+function openNote(id){
+  currentId = id;
+  const note = notes.find(n=>n.id===id);
+  if(!note) return;
+  document.getElementById('welcomeScreen').style.display='none';
+  const panel = document.getElementById('editorPanel');
+  panel.style.display='flex';
+  document.getElementById('noteTitle').value = note.title;
+  document.getElementById('editor').innerHTML = note.content;
+  currentTags = [...(note.tags||[])];
+  renderTags();
+  updateWordCount();
+  document.getElementById('noteDate').textContent = 'Son güncelleme: '+formatDate(note.updatedAt);
+  renderList(document.getElementById('searchInput').value);
+  document.getElementById('noteTitle').focus();
+}
+
+function saveNote(){
+  if(!currentId) return;
+  const note = notes.find(n=>n.id===currentId);
+  if(!note) return;
+  note.title = document.getElementById('noteTitle').value;
+  note.content = document.getElementById('editor').innerHTML;
+  note.tags = [...currentTags];
+  note.updatedAt = Date.now();
+  notes.sort((a,b)=>b.updatedAt-a.updatedAt);
+  saveAll();
+  renderList(document.getElementById('searchInput').value);
+  const ind = document.getElementById('saveIndicator');
+  ind.classList.add('show');
+  setTimeout(()=>ind.classList.remove('show'),2000);
+  document.getElementById('noteDate').textContent = 'Son güncelleme: '+formatDate(note.updatedAt);
+  showToast('Not kaydedildi','success');
+}
+
+function autoSave(){
+  updateWordCount();
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(()=>{
+    if(!currentId) return;
+    const note = notes.find(n=>n.id===currentId);
+    if(!note) return;
+    note.title = document.getElementById('noteTitle').value;
+    note.content = document.getElementById('editor').innerHTML;
+    note.tags = [...currentTags];
+    note.updatedAt = Date.now();
+    notes.sort((a,b)=>b.updatedAt-a.updatedAt);
+    saveAll();
+    renderList(document.getElementById('searchInput').value);
+    const ind = document.getElementById('saveIndicator');
+    ind.classList.add('show');
+    setTimeout(()=>ind.classList.remove('show'),1500);
+  },800);
+}
+
+function deleteNote(e,id){
+  e.stopPropagation();
+  if(!confirm('Bu notu silmek istediğine emin misin?')) return;
+  notes = notes.filter(n=>n.id!==id);
+  saveAll();
+  if(currentId===id){
+    currentId=null;
+    document.getElementById('welcomeScreen').style.display='flex';
+    document.getElementById('editorPanel').style.display='none';
+  }
+  renderList();
+  showToast('Not silindi','danger');
+}
+
+function saveAll(){
+  localStorage.setItem('notdefteri_notes',JSON.stringify(notes));
+}
+
+function searchNotes(){
+  renderList(document.getElementById('searchInput').value);
+}
+
+function fmt(cmd,val=null){
+  document.getElementById('editor').focus();
+  document.execCommand(cmd,false,val);
+  autoSave();
+}
+
+function fmtBlock(tag){
+  document.getElementById('editor').focus();
+  document.execCommand('formatBlock',false,tag);
+  autoSave();
+}
+
+function insertHR(){
+  document.getElementById('editor').focus();
+  document.execCommand('insertHTML',false,'<hr>');
+  autoSave();
+}
+
+function insertLink(){
+  const url = prompt('URL gir:');
+  if(url){
+    document.getElementById('editor').focus();
+    document.execCommand('createLink',false,url);
+    autoSave();
+  }
+}
+
+function insertImage(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    document.getElementById('editor').focus();
+    document.execCommand('insertHTML',false,`<img src="${ev.target.result}" alt="resim">`);
+    autoSave();
+    showToast('Resim eklendi','success');
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
+// Tags
+function renderTags(){
+  const list = document.getElementById('tagList');
+  list.innerHTML = currentTags.map((t,i)=>`
+    <span class="tag-pill">${t}<button onclick="removeTag(${i})">×</button></span>
+  `).join('');
+}
+
+function handleTag(e){
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const val = e.target.value.trim().replace(',','');
+    if(val && !currentTags.includes(val)){
+      currentTags.push(val);
+      renderTags();
+      autoSave();
+    }
+    e.target.value='';
+  }
+}
+
+function removeTag(i){
+  currentTags.splice(i,1);
+  renderTags();
+  autoSave();
+}
+
+// Word count
+function updateWordCount(){
+  const text = getTextContent(document.getElementById('editor').innerHTML);
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const chars = text.length;
+  document.getElementById('wordCount').textContent = words+' kelime';
+  document.getElementById('charCount').textContent = chars+' karakter';
+}
+
+// Toast
+function showToast(msg,type=''){
+  const t = document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast '+(type||'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveNote()}
+  if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();newNote()}
+});
+
+// Init
+renderList();
+</script>
+</body>
+</html>
